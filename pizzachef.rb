@@ -27,9 +27,22 @@ server.mount_proc '/pieRequest' do |req, res|
     res.body = "we are out of ingredients"
     return
   end
-
   cmd = con.prepare "UPDATE ingredient_packs SET count = ?"
   cmd.execute (remaining - cnt)
+  
+  rs = con.query "SELECT count FROM doughballs"
+  record = rs.fetch_hash
+  remaining = record["count"].to_i
+  puts "the bistro fridge has #{(remaining)} doughballs remaining"
+
+  if remaining == 0
+    req.status = 500
+    res.body = "we are out of doughballs"
+    return
+  end
+  cmd = con.prepare "UPDATE doughballs SET count = ?"
+  cmd.execute (remaining - cnt)
+
   
   #bake the pies
   uri = URI.parse("http://woodbrick.deterlab.net:8082")
